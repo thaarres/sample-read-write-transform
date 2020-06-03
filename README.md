@@ -1,6 +1,6 @@
 # sample-read-write-transform
 
-## call
+## call event to image serialization
 
 ```console
 python3 -u event_to_image_serialization.py -in input_dir/input_file.h5 -out output_dir/output_file.h5
