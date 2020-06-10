@@ -5,9 +5,12 @@ import data_writer as dw
 
 def read_concat_write(indir, outfile, max_n):
     reader = dr.DataReader(indir)
-    data = reader.read_events_from_dir(max_n)
-    keys = ['jetConstituentsList', 'particleFeatureNames', 'eventFeatures', 'eventFeatureNames']
-    dw.write_data_to_file(data, keys, outfile)
+    constituents_concat, particle_feature_names, features_concat, dijet_feature_names = reader.read_events_from_dir(max_n)
+    keys = [l.encode('utf-8') for l in ['jetConstituentsList', 'particleFeatureNames', 'eventFeatures', 'eventFeatureNames']]
+    particle_feature_names = [n.encode('utf-8') for n in particle_feature_names]
+    dijet_feature_names = [n.encode('utf-8') for n in dijet_feature_names]
+    print('writing {} events to {}'.format(constituents_concat.shape[0], outfile))
+    dw.write_data_to_file([constituents_concat, particle_feature_names, features_concat, dijet_feature_names], keys, outfile)
 
 
 if __name__ == "__main__":
@@ -21,4 +24,4 @@ if __name__ == "__main__":
 
     print('concatenating data in', args.indir)
 
-    read_concat_write(args.infile, args.outfile, args.num_evts)
+    read_concat_write(args.indir, args.outfile, args.num_evts)

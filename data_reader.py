@@ -39,7 +39,7 @@ class DataReader():
         with h5py.File(path,'r') as f:
             features = np.array(f.get(self.jet_features_key))
             constituents = np.array(f.get(self.jet_constituents_key))
-            return [features, constituents]
+            return [constituents, features]
 
 
     def read_events_from_dir(self, max_N=1e9):
@@ -62,10 +62,12 @@ class DataReader():
                 constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=features[:, 0], filter_val=self.mjj_cut) # 0: mjj_idx
                 constituents_concat.extend(constituents)
                 features_concat.extend(features)
-            except Exception as e:
+            except OSError as e:
                 print("\nCould not read file ", fname, ': ', repr(e))
             if len(constituents_concat) > max_N:
                 break
+
+        print('\nnum files read in dir ', self.path, ': ', i_file + 1)
 
         for i_file, fname in enumerate(flist):
             try:
@@ -75,8 +77,7 @@ class DataReader():
             except Exception as e:
                 print("\nCould not read file ", fname, ': ', repr(e))
 
-        print('\nnum files read in dir ', self.path, ': ', i_file + 1)
-        return [constituents_concat, particle_feature_names, features_concat, dijet_feature_names]
+        return [np.asarray(constituents_concat), particle_feature_names, np.asarray(features_concat), dijet_feature_names]
 
 
     def read_jet_constituents(self):
