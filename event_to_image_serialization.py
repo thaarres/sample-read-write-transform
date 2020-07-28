@@ -85,8 +85,8 @@ class ImageSerializer():
         images_j1, images_j2 = self.convert_events_to_image( events_j1, events_j2 )
         # normalize by pt
         images_j1, images_j2 = self.normalize_by_jet_pt( images_j1, images_j2, dijet_features, labels )
-        # write images to file ( dim = 2 (jets) X n_events X n_bins X n_bins X 1 (channels)
-        image_data = np.array([images_j1.reshape(images_j1.shape[0], images_j1.shape[1], images_j1.shape[2], 1), images_j2.reshape(images_j2.shape[0], images_j2.shape[1], images_j2.shape[2], 1)], dtype="float32")
+        # write images to file ( dim = 2 (jets) X n_events X n_bins X n_bins
+        image_data = np.array([images_j1, images_j2], dtype="float32")
         self.write_transformed( image_data, dijet_features, labels, out_path )
 
 
