@@ -64,6 +64,8 @@ class DataReader():
                 features_concat.extend(features)
             except OSError as e:
                 print("\nCould not read file ", fname, ': ', repr(e))
+            except IndexError as e:
+                print("\nNo data in file ", fname, ':', repr(e))
             if len(constituents_concat) > max_N:
                 break
 
