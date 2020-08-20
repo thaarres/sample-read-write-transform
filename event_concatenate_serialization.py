@@ -6,27 +6,27 @@ import data_writer as dw
 
 def compute_num_file_parts(constituents, features, sz_mb):
     sz_mb_total = (constituents.nbytes + features.nbytes) / 1024**2
-    n_parts = np.ceil(sz_mb_total/sz_mb)
-    print('divinding dataset of size {} MB into {} chunks of size {}'.format(sz_mb_total, n_parts, sz_mb))
+    n_parts = int(np.ceil(sz_mb_total/sz_mb))
+    print('divinding dataset of size {:6.2f} MB into {:d} chunks of size {:6.2f} MB'.format(sz_mb_total, n_parts, sz_mb))
     return n_parts
 
 
 def split_concat_data(constituents, features, n_parts):
-    return [np.split(constituents, n_parts), np.split(features, n_parts)]
+    return [np.array_split(constituents, n_parts), np.array_split(features, n_parts)]
 
 
 def write_file_parts(constituents, constituent_names, features, feature_names, keys, file_name, sz_mb):
     n_file_parts = compute_num_file_parts(constituents, features, sz_mb)
     constituents_parts, features_parts = split_concat_data(constituents, features, n_file_parts)
-    file_ext_idx = file_name.rindex('.')
+    ext_idx = file_name.rindex('.')
     for i, (constituents_i, features_i) in enumerate(zip(constituents_parts, features_parts)):
-        file_name_part = file_name[:idx] + "_{:03d}".format(i) + file_name[idx:] 
+        file_name_part = file_name[:ext_idx] + "_{:03d}".format(i) + file_name[ext_idx:] 
         write_file([constituents_i, constituent_names, features_i, feature_names], keys, file_name_part)        
 
 
-def write_file(constituents, constituent_names, features, feature_names, keys, file_name):
-    print('writing {} events to {}'.format(constituents_concat.shape[0], file_name))
-    dw.write_data_to_file([constituents, constituent_names, features, feature_names], keys, file_name)
+def write_file(data, keys, file_name):
+    print('writing {} events to {}'.format(data[0].shape[0], file_name))
+    dw.write_data_to_file(data, keys, file_name)
 
 
 def read_concat_write(indir, file_name, n_max, sz_mb):    
@@ -38,7 +38,7 @@ def read_concat_write(indir, file_name, n_max, sz_mb):
     if sz_mb:
         write_file_parts(constituents_concat, particle_feature_names, features_concat, dijet_feature_names, keys=keys, file_name=file_name, sz_mb=sz_mb)
     else:
-        write_file(constituents_concat, particle_feature_names, features_concat, dijet_feature_names, keys=keys, file_name=file_name)
+        write_file([constituents_concat, particle_feature_names, features_concat, dijet_feature_names], keys=keys, file_name=file_name)
 
 
 if __name__ == "__main__":
