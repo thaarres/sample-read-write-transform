@@ -21,8 +21,10 @@ with optional limitation on number of events:
 
 ```console
 -n 10000
+```
 
 with optional limitation on file size in [MB] (in this case, output is split into multiple files indexed by _i part flag):
 
 ```console
 -mb 100
+```
