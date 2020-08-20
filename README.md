@@ -17,7 +17,7 @@ with optional limitation on number of events:
 ```console
 python3 -u event_concatenate_serialization.py -in input_dir -out output_dir/output_file.h5
 ```
-with optional limitation on number of events:
+with optional limitation on number of events to read from input directory:
 
 ```console
 -n 10000
