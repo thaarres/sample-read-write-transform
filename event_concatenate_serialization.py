@@ -19,7 +19,7 @@ def write_file_parts(constituents, constituent_names, features, feature_names, k
     n_file_parts = compute_num_file_parts(constituents, features, sz_mb)
     constituents_parts, features_parts = split_concat_data(constituents, features, n_file_parts)
     file_ext_idx = file_name.rindex('.')
-    for i, constituents_i, features_i in enum(zip(constituents_parts, features_parts)):
+    for i, (constituents_i, features_i) in enumerate(zip(constituents_parts, features_parts)):
         file_name_part = file_name[:idx] + "_{:03d}".format(i) + file_name[idx:] 
         write_file([constituents_i, constituent_names, features_i, feature_names], keys, file_name_part)        
 
