@@ -27,7 +27,7 @@ class DataReader():
         for path, _, _ in os.walk(self.path, followlinks=True):
             print('reading ', path)
             flist += glob(path + '/' + '*.h5')
-        return flist
+        return flist.sort()
 
     def read_data_from_file(self, key, path=None):
         if path is None:
