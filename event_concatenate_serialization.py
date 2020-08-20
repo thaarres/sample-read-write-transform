@@ -6,7 +6,9 @@ import data_writer as dw
 
 def compute_num_file_parts(constituents, features, sz_mb):
     sz_mb_total = (constituents.nbytes + features.nbytes) / 1024**2
-    return np.ceil(sz_mb_total/sz_mb)
+    n_parts = np.ceil(sz_mb_total/sz_mb)
+    print('divinding dataset of size {} MB into {} chunks of size {}'.format(sz_mb_total, n_parts, sz_mb))
+    return n_parts
 
 
 def split_concat_data(constituents, features, n_parts):
@@ -14,8 +16,8 @@ def split_concat_data(constituents, features, n_parts):
 
 
 def write_file_parts(constituents, constituent_names, features, feature_names, keys, file_name, sz_mb):
-    num_file_parts = compute_num_file_parts(constituents, features, sz_mb)
-    constituents_parts, features_parts = split_concat_data(constituents, features)
+    n_file_parts = compute_num_file_parts(constituents, features, sz_mb)
+    constituents_parts, features_parts = split_concat_data(constituents, features, n_file_parts)
     file_ext_idx = file_name.rindex('.')
     for i, constituents_i, features_i in enum(zip(constituents_parts, features_parts)):
         file_name_part = file_name[:idx] + "_{:03d}".format(i) + file_name[idx:] 
