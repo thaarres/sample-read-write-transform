@@ -26,6 +26,8 @@ class DataReader():
     def get_file_list(self):
         flist = []
         for path, _, _ in os.walk(self.path, followlinks=True):
+            if "MAYBE_BROKEN" in path:
+                continue
             print('reading ', path)
             flist += glob(path + '/' + '*.h5')
         flist.sort()
