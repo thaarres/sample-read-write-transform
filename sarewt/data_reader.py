@@ -83,6 +83,37 @@ class DataReader():
         return [np.asarray(constituents_concat), particle_feature_names, np.asarray(features_concat), dijet_feature_names]
 
 
+    def read_jet_features_from_dir(self):
+
+        print('reading', self.path)
+
+        features_concat = []
+
+        flist = self.get_file_list()
+        print('num files in dir:', len(flist))
+
+        for i_file, fname in enumerate(flist):
+            try:
+                features = self.read_data_from_file(key=self.jet_features_key, path=fname)
+                features_concat.extend(features)
+            except OSError as e:
+                print("\nCould not read file ", fname, ': ', repr(e))
+            except IndexError as e:
+                print("\nNo data in file ", fname, ':', repr(e))
+
+        print('\nnum files read in dir ', self.path, ': ', i_file + 1)
+
+        for i_file, fname in enumerate(flist):
+            try:
+                dijet_feature_names = self.read_labels(self.dijet_feature_names, fname)
+                break
+            except Exception as e:
+                print("\nCould not read file ", fname, ': ', repr(e))
+
+        return [np.asarray(features_concat), dijet_feature_names]
+
+
+
     def read_jet_constituents(self):
         return self.read_data_from_file( self.jet_constituents_key )
 
