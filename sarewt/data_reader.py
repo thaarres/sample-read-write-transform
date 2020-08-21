@@ -2,8 +2,9 @@ import h5py
 import os
 import numpy as np
 from glob import glob
+import pandas as pd
 
-import util as ut
+import sarewt.util as ut
 
 class DataReader():
     '''
@@ -95,6 +96,7 @@ class DataReader():
         for i_file, fname in enumerate(flist):
             try:
                 features = self.read_data_from_file(key=self.jet_features_key, path=fname)
+                features, = ut.filter_arrays_on_value(features, filter_arr=features[:, 0], filter_val=self.mjj_cut) # 0: mjj_idx # TODO: when filter() is passed only one array, has to be unpacked by caller as a, = filter() => need to change variadic *arrays argument!
                 features_concat.extend(features)
             except OSError as e:
                 print("\nCould not read file ", fname, ': ', repr(e))
@@ -102,6 +104,7 @@ class DataReader():
                 print("\nNo data in file ", fname, ':', repr(e))
 
         print('\nnum files read in dir ', self.path, ': ', i_file + 1)
+        print('\nnum events read in dir ', np.asarray(features_concat).shape[0])
 
         for i_file, fname in enumerate(flist):
             try:
@@ -112,6 +115,10 @@ class DataReader():
 
         return [np.asarray(features_concat), dijet_feature_names]
 
+
+    def read_jet_features_from_dir_to_df(self):
+        features, names = self.read_jet_features_from_dir()
+        return pd.DataFrame(features,columns=names)
 
 
     def read_jet_constituents(self):
