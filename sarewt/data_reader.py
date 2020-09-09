@@ -46,6 +46,26 @@ class DataReader():
             return [constituents, features]
 
 
+    def count_files_events_in_dir(self):
+
+        features_concat = []
+
+        flist = self.get_file_list()
+
+        for i_file, fname in enumerate(flist):
+            try:
+                features = self.read_data_from_file(key=self.jet_features_key, path=fname)
+                features_concat.extend(features)
+            except OSError as e:
+                print("\nCould not read file ", fname, ': ', repr(e))
+            except IndexError as e:
+                print("\nNo data in file ", fname, ':', repr(e))
+            except Exception as e:
+                print("\nCould not read file ", fname, ': ', repr(e))
+
+        return len(flist), np.asarray(features_concat).shape[0]
+
+
     def read_events_from_dir(self, max_N=1e9):
         '''
         read dijet events (jet constituents & jet features) from files in directory
