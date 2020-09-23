@@ -28,7 +28,6 @@ class DataReader():
         for path, _, _ in os.walk(self.path, followlinks=True):
             if "MAYBE_BROKEN" in path:
                 continue
-            print('reading ', path)
             flist += glob(path + '/' + '*.h5')
         flist.sort()
         return flist
@@ -78,7 +77,6 @@ class DataReader():
         features_concat = []
 
         flist = self.get_file_list()
-        print('num files in dir:', len(flist))
 
         for i_file, fname in enumerate(flist):
             try:
@@ -113,7 +111,6 @@ class DataReader():
         features_concat = []
 
         flist = self.get_file_list()
-        print('num files in dir:', len(flist))
 
         for i_file, fname in enumerate(flist):
             try:
@@ -125,8 +122,7 @@ class DataReader():
             except IndexError as e:
                 print("\nNo data in file ", fname, ':', repr(e))
 
-        print('\nnum files read in dir ', self.path, ': ', i_file + 1)
-        print('\nnum events read in dir ', np.asarray(features_concat).shape[0])
+        print('{} events read in {} files in dir {}'.format(np.asarray(features_concat).shape[0], i_file + 1, self.path))
 
         for i_file, fname in enumerate(flist):
             try:
@@ -155,3 +151,5 @@ class DataReader():
         if path is None:
             path = self.path
         return [ l.decode("utf-8") for l in self.read_data_from_file( key, path ) ] # decode to unicode if (from byte str of Python2)
+
+
