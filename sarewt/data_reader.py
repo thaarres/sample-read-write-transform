@@ -24,6 +24,7 @@ class DataReader():
         self.mjj_cut = 1100.
 
     def get_file_list(self):
+        ''' return *sorted* recursive file-list in self.path '''
         flist = []
         for path, _, _ in os.walk(self.path, followlinks=True):
             if "MAYBE_BROKEN" in path:
@@ -140,6 +141,9 @@ class DataReader():
 
 
     def read_jet_constituents(self):
+        ''' return array of shape [N x 2 x 100 x 3] with
+            N examples, each with 2 jets, each with 100 highest pt particles, each with features eta phi pt
+        '''
         return self.read_data_from_file( self.jet_constituents_key )
 
     def read_jet_features(self):
@@ -153,3 +157,74 @@ class DataReader():
         return [ l.decode("utf-8") for l in self.read_data_from_file( key, path ) ] # decode to unicode if (from byte str of Python2)
 
 
+class CaseDataReader(DataReader):
+
+    # set different keys
+    def __init__(self, path):
+        DataReader.__init__(self, path)
+        self.jet_features_key = 'jet_kinematics'
+        self.dijet_feature_names_val = ['mJJ', 'DeltaEtaJJ', 'j1Pt', 'j1Eta', 'j1Phi', 'j1M', 'j2Pt', 'j2Eta', 'j2Phi', 'j2M', 'j3Pt', 'j3Eta', 'j3Phi', 'j3M']
+        self.jet1_constituents_key = 'jet1_PFCands'
+        self.jet2_constituents_key = 'jet2_PFCands'
+        self.constituents_feature_names_val = ['Px', 'Py', 'Pz', 'E']
+        self.truth_label_key = 'truth_label'
+
+    # TODO: how to exclude "test" file? (own get_file_list function?)
+
+    def read_jet_constituents_from_file(self, file):
+        ''' return jet constituents as array of shape N x 2 x 100 x 4
+            (N examples, each with 2 jets, each jet with 100 highest-pt particles, each particle with px, py, pz, E features)
+        '''
+        if isinstance(file, str):
+            file = h5py.File(file,'r') 
+        j1_constituents = np.array(file.get(self.jet1_constituents_key)) # (576902, 100, 4)
+        j2_constituents = np.array(file.get(self.jet2_constituents_key)) # (576902, 100, 4)
+        return np.stack([j1_constituents, j2_constituents], axis=1)
+
+
+    def read_constituents_and_dijet_features_from_file(self, path):
+        with h5py.File(path,'r') as f:
+            features = np.array(f.get(self.jet_features_key))
+            constituents = self.read_jet_constituents_from_file(f)
+            return [constituents, features]
+
+    def read_labels(self, key, path=None):
+        ''' labels are not provided in CASE dataset '''
+        if key == self.dijet_feature_names:
+            return self.dijet_feature_names_val
+        if key == self.constituents_feature_names:
+            return self.constituents_feature_names_val
+
+
+    def read_events_from_dir(self, max_N=1e9):
+        '''
+        read dijet events (jet constituents & jet features) from files in directory
+        :param max_N: limit number of events
+        :return: concatenated jet constituents and jet feature array + corresponding particle feature names and event feature names
+        '''
+        print('reading', self.path)
+
+        constituents_concat = []
+        features_concat = []
+        truth_labels_concat = []
+
+        flist = self.get_file_list()
+
+        for i_file, fname in enumerate(flist):
+            try:
+                constituents, features = self.read_constituents_and_dijet_features_from_file(fname)
+                #constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=features[:, 0], filter_val=self.mjj_cut) # 0: mjj_idx
+                truth_labels = self.read_data_from_file(self.truth_label_key, fname)
+                constituents_concat.extend(constituents)
+                features_concat.extend(features)
+                truth_labels_concat.extend(truth_labels)
+            except OSError as e:
+                print("\nCould not read file ", fname, ': ', repr(e))
+            except IndexError as e:
+                print("\nNo data in file ", fname, ':', repr(e))
+            if len(constituents_concat) > max_N:
+                break
+
+        print('\nnum files read in dir ', self.path, ': ', i_file + 1)
+
+        return [np.asarray(constituents_concat), self.constituents_feature_names_val, np.asarray(features_concat), self.dijet_feature_names_val, np.asarray(truth_labels_concat)]
