@@ -72,7 +72,7 @@ class DataReader():
         :param max_N: limit number of events
         :return: concatenated jet constituents and jet feature array + corresponding particle feature names and event feature names
         '''
-        print('reading', self.path)
+        #print('reading', self.path)
 
         constituents_concat = []
         features_concat = []
@@ -105,9 +105,14 @@ class DataReader():
         return [np.asarray(constituents_concat), particle_feature_names, np.asarray(features_concat), dijet_feature_names]
 
 
+    def read_constituents_from_dir(self):
+        ''' read constituents of jet 1 and jet 2 from all file parts in directory '''
+        constituents, _ = self.read_events_from_dir()
+        return constituents[:,0,:,:], constituents[:,1,:,:]
+
     def read_jet_features_from_dir(self):
 
-        print('reading', self.path)
+        #print('reading', self.path)
 
         features_concat = []
 
