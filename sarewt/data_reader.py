@@ -66,7 +66,7 @@ class DataReader():
         return len(flist), np.asarray(features_concat).shape[0]
 
 
-    def read_events_from_dir(self, max_N=1e9):
+    def read_events_from_dir(self, max_N=1e9, features_to_df=False):
         '''
         read dijet events (jet constituents & jet features) from files in directory
         :param max_N: limit number of events
@@ -102,13 +102,14 @@ class DataReader():
             except Exception as e:
                 print("\nCould not read file ", fname, ': ', repr(e))
 
-        return [np.asarray(constituents_concat), particle_feature_names, np.asarray(features_concat), dijet_feature_names]
+        features = pd.DataFrame(np.asarray(features_concat),columns=dijet_feature_names) if features_to_df else np.asarray(features_concat)
+        return [np.asarray(constituents_concat), particle_feature_names, features, dijet_feature_names]
 
 
     def read_constituents_from_dir(self):
         ''' read constituents of jet 1 and jet 2 from all file parts in directory '''
-        constituents, _ = self.read_events_from_dir()
-        return constituents[:,0,:,:], constituents[:,1,:,:]
+        constituents, *_ = self.read_events_from_dir()
+        return constituents
 
     def read_jet_features_from_dir(self):
 
@@ -145,7 +146,7 @@ class DataReader():
         return pd.DataFrame(features,columns=names)
 
 
-    def read_jet_constituents(self):
+    def read_constituents_from_file(self):
         ''' return array of shape [N x 2 x 100 x 3] with
             N examples, each with 2 jets, each with 100 highest pt particles, each with features eta phi pt
         '''
