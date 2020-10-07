@@ -39,10 +39,10 @@ class DataReader():
         with h5py.File(path,'r') as f:
             return np.asarray(f.get(key))
 
-    def read_constituents_and_dijet_features_from_file(self,path):
+    def read_constituents_and_dijet_features_from_file(self, path, dtype='float32'):
         with h5py.File(path,'r') as f:
-            features = np.array(f.get(self.jet_features_key))
-            constituents = np.array(f.get(self.jet_constituents_key))
+            features = np.array(f.get(self.jet_features_key), dtype=dtype)
+            constituents = np.array(f.get(self.jet_constituents_key), dtype=dtype)
             return [constituents, features]
 
 
@@ -72,7 +72,7 @@ class DataReader():
         :param max_N: limit number of events
         :return: concatenated jet constituents and jet feature array + corresponding particle feature names and event feature names
         '''
-        #print('reading', self.path)
+        print('reading', self.path)
 
         constituents_concat = []
         features_concat = []
@@ -86,9 +86,9 @@ class DataReader():
                 constituents_concat.extend(constituents)
                 features_concat.extend(features)
             except OSError as e:
-                print("\nCould not read file ", fname, ': ', repr(e))
+                print("\n[ERROR] Could not read file ", fname, ': ', repr(e))
             except IndexError as e:
-                print("\nNo data in file ", fname, ':', repr(e))
+                print("\n[ERROR] No data in file ", fname, ':', repr(e))
             if len(constituents_concat) > max_N:
                 break
 
@@ -146,13 +146,24 @@ class DataReader():
         return pd.DataFrame(features,columns=names)
 
 
+    def read_events_from_file(self):
+        try:
+            constituents, features = self.read_constituents_and_dijet_features_from_file(self.path)
+            constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=features[:, 0], filter_val=self.mjj_cut) # 0: mjj_idx
+            constituents_feature_names = self.read_labels(self.constituents_feature_names, self.path)
+            dijet_feature_names = self.read_labels(self.dijet_feature_names, self.path)
+        except Exception as e:
+            print("\nCould not read file ", self.path, ': ', repr(e))
+        return constituents, constituents_feature_names, features, dijet_feature_names            
+
+
     def read_constituents_from_file(self):
         ''' return array of shape [N x 2 x 100 x 3] with
             N examples, each with 2 jets, each with 100 highest pt particles, each with features eta phi pt
         '''
         return self.read_data_from_file( self.jet_constituents_key )
 
-    def read_jet_features(self):
+    def read_jet_features_from_file(self):
         return self.read_data_from_file(self.jet_features_key)
 
     def read_labels(self,key=None,path=None):
