@@ -111,7 +111,7 @@ class DataReader():
         constituents, *_ = self.read_events_from_dir()
         return constituents
 
-    def read_jet_features_from_dir(self):
+    def read_jet_features_from_dir(self, apply_mjj_cut=True):
 
         #print('reading', self.path)
 
@@ -122,7 +122,8 @@ class DataReader():
         for i_file, fname in enumerate(flist):
             try:
                 features = self.read_data_from_file(key=self.jet_features_key, path=fname)
-                features, = ut.filter_arrays_on_value(features, filter_arr=features[:, 0], filter_val=self.mjj_cut) # 0: mjj_idx # TODO: when filter() is passed only one array, has to be unpacked by caller as a, = filter() => need to change variadic *arrays argument!
+                if apply_mjj_cut:
+                    features, = ut.filter_arrays_on_value(features, filter_arr=features[:, 0], filter_val=self.mjj_cut) # 0: mjj_idx # TODO: when filter() is passed only one array, has to be unpacked by caller as a, = filter() => need to change variadic *arrays argument!
                 features_concat.extend(features)
             except OSError as e:
                 print("\nCould not read file ", fname, ': ', repr(e))
@@ -141,8 +142,8 @@ class DataReader():
         return [np.asarray(features_concat), dijet_feature_names]
 
 
-    def read_jet_features_from_dir_to_df(self):
-        features, names = self.read_jet_features_from_dir()
+    def read_jet_features_from_dir_to_df(self, apply_mjj_cut=True):
+        features, names = self.read_jet_features_from_dir(apply_mjj_cut)
         return pd.DataFrame(features,columns=names)
 
 
