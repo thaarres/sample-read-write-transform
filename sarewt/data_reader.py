@@ -66,7 +66,7 @@ class DataReader():
         return len(flist), np.asarray(features_concat).shape[0]
 
 
-    def read_events_from_dir(self, max_N=1e9, features_to_df=False):
+    def read_events_from_dir(self, max_N=1e9, features_to_df=False, apply_mjj_cut=True):
         '''
         read dijet events (jet constituents & jet features) from files in directory
         :param max_N: limit number of events
@@ -82,7 +82,8 @@ class DataReader():
         for i_file, fname in enumerate(flist):
             try:
                 constituents, features = self.read_constituents_and_dijet_features_from_file(fname)
-                constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=features[:, 0], filter_val=self.mjj_cut) # 0: mjj_idx
+                if apply_mjj_cut:
+                    constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=features[:, 0], filter_val=self.mjj_cut) # 0: mjj_idx
                 constituents_concat.extend(constituents)
                 features_concat.extend(features)
             except OSError as e:
