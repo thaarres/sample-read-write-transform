@@ -3,6 +3,7 @@ import os
 import numpy as np
 from glob import glob
 import pandas as pd
+import operator
 
 import sarewt.util as ut
 
@@ -66,10 +67,20 @@ class DataReader():
         return len(flist), np.asarray(features_concat).shape[0]
 
 
-    def read_events_from_dir(self, max_N=1e9, features_to_df=False, apply_mjj_cut=True):
+    def make_cuts(self, constituents, features, **cuts):
+        if 'mJJ' in cuts:
+            constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=features[:, 0], filter_val=cuts['mJJ'])
+        if 'sideband' in cuts:
+            constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=np.abs(features[:, -2]), filter_val=cuts['sideband'])
+        if 'signalregion' in cuts:
+            constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=np.abs(features[:, -2]), filter_val=cuts['signalregion'], comp=operator.le)
+        return constituents, features
+
+
+    def read_events_from_dir(self, max_n=1e9, features_to_df=False, **cuts):
         '''
         read dijet events (jet constituents & jet features) from files in directory
-        :param max_N: limit number of events
+        :param max_n: limit number of events
         :return: concatenated jet constituents and jet feature array + corresponding particle feature names and event feature names
         '''
         print('reading', self.path)
@@ -82,15 +93,15 @@ class DataReader():
         for i_file, fname in enumerate(flist):
             try:
                 constituents, features = self.read_constituents_and_dijet_features_from_file(fname)
-                if apply_mjj_cut:
-                    constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=features[:, 0], filter_val=self.mjj_cut) # 0: mjj_idx
+                if cuts:
+                    constituents, features = self.make_cuts(constituents, features, **cuts) # 0: mjj_idx
                 constituents_concat.extend(constituents)
                 features_concat.extend(features)
             except OSError as e:
                 print("\n[ERROR] Could not read file ", fname, ': ', repr(e))
             except IndexError as e:
                 print("\n[ERROR] No data in file ", fname, ':', repr(e))
-            if len(constituents_concat) > max_N:
+            if len(constituents_concat) > max_n:
                 break
 
         print('\nnum files read in dir ', self.path, ': ', i_file + 1)
@@ -215,10 +226,10 @@ class CaseDataReader(DataReader):
             return self.constituents_feature_names_val
 
 
-    def read_events_from_dir(self, max_N=1e9):
+    def read_events_from_dir(self, max_n=1e9):
         '''
         read dijet events (jet constituents & jet features) from files in directory
-        :param max_N: limit number of events
+        :param max_n: limit number of events
         :return: concatenated jet constituents and jet feature array + corresponding particle feature names and event feature names
         '''
         print('reading', self.path)
@@ -241,7 +252,7 @@ class CaseDataReader(DataReader):
                 print("\nCould not read file ", fname, ': ', repr(e))
             except IndexError as e:
                 print("\nNo data in file ", fname, ':', repr(e))
-            if len(constituents_concat) > max_N:
+            if len(constituents_concat) > max_n:
                 break
 
         print('\nnum files read in dir ', self.path, ': ', i_file + 1)

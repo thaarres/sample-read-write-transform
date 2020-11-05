@@ -29,9 +29,14 @@ def write_file(data, keys, file_name):
     dw.write_data_to_file(data, keys, file_name)
 
 
-def read_concat_write(indir, file_name, n_max, sz_mb):    
+def read_concat_write(indir, file_name, max_n, sz_mb, side, sigreg):    
     reader = dr.DataReader(indir)
-    constituents_concat, particle_feature_names, features_concat, dijet_feature_names = reader.read_events_from_dir(n_max)
+    cuts = {'mJJ': 1100.}
+    if side:
+        cuts['sideband'] = 1.4
+    if sigreg:
+        cuts['signalregion'] = 1.4 
+    constituents_concat, particle_feature_names, features_concat, dijet_feature_names = reader.read_events_from_dir(max_n=max_n, **cuts)
     keys = [l.encode('utf-8') for l in ['jetConstituentsList', 'particleFeatureNames', 'eventFeatures', 'eventFeatureNames']]
     particle_feature_names = [n.encode('utf-8') for n in particle_feature_names]
     dijet_feature_names = [n.encode('utf-8') for n in dijet_feature_names]
@@ -48,9 +53,11 @@ if __name__ == "__main__":
     parser.add_argument('-out', dest='outfile', type=str, default='out.h5', help='output file name/path')
     parser.add_argument('-n', dest='num_evts', type=int, default=1e9, help='max number of events for output dataset')
     parser.add_argument('-mb', dest='sz_mb', type=int, help='split concatenated dataset in multiple files, each of size mb [MB]')
+    parser.add_argument('--side', dest='side', action='store_true', help='|dEta| > 1.4 sideband')
+    parser.add_argument('--signal', dest='sigreg', action='store_true', help='|dEta| <= 1.4  signalregion')
 
     args = parser.parse_args()
 
     print('concatenating data in', args.indir)
 
-    read_concat_write(args.indir, args.outfile, args.num_evts, args.sz_mb)
+    read_concat_write(args.indir, args.outfile, args.num_evts, args.sz_mb, args.side, args.sigreg)
