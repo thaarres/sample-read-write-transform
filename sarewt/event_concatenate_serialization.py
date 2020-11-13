@@ -18,11 +18,13 @@ def split_concat_data(constituents, features, n_parts):
 def write_file_parts(constituents, constituent_names, features, feature_names, keys, file_name, sz_mb):
     n_file_parts = compute_num_file_parts(constituents, features, sz_mb)
     constituents_parts, features_parts = split_concat_data(constituents, features, n_file_parts)
-    ext_idx = file_name.rindex('.')
     for i, (constituents_i, features_i) in enumerate(zip(constituents_parts, features_parts)):
-        file_name_part = file_name[:ext_idx] + "_{:03d}".format(i) + file_name[ext_idx:] 
-        write_file([constituents_i, constituent_names, features_i, feature_names], keys, file_name_part)        
+        write_single_file([constituents_i, constituent_names, features_i, feature_names], keys, file_name, i)        
 
+def write_single_file_part(data, keys, file_name, part_n):
+    ext_idx = file_name.rindex('.')
+    file_name_part = file_name[:ext_idx] + "_{:03d}".format(part_n) + file_name[ext_idx:] 
+    write_file(data, keys, file_name_part)        
 
 def write_file(data, keys, file_name):
     print('writing {} events to {}'.format(data[0].shape[0], file_name))
@@ -35,14 +37,17 @@ def read_concat_write(indir, file_name, max_n, sz_mb, side, sigreg):
     if side:
         cuts['sideband'] = 1.4
     if sigreg:
-        cuts['signalregion'] = 1.4 
-    constituents_concat, particle_feature_names, features_concat, dijet_feature_names = reader.read_events_from_dir(max_n=max_n, **cuts)
+        cuts['signalregion'] = 1.4
+    
     keys = [l.encode('utf-8') for l in ['jetConstituentsList', 'particleFeatureNames', 'eventFeatures', 'eventFeatureNames']]
-    particle_feature_names = [n.encode('utf-8') for n in particle_feature_names]
-    dijet_feature_names = [n.encode('utf-8') for n in dijet_feature_names]
+    # write multiple file parts
     if sz_mb:
-        write_file_parts(constituents_concat, particle_feature_names, features_concat, dijet_feature_names, keys=keys, file_name=file_name, sz_mb=sz_mb)
-    else:
+        particle_feature_names, dijet_feature_names = reader.read_labels_from_dir() 
+        for part_n, (constituents_concat, features_concat) in enumerate(reader.read_event_parts_from_dir(sz_mb, **cuts))
+            write_single_file_part([constituents_concat, particle_feature_names, features_concat, dijet_feature_names], keys=keys, file_name=file_name, part_n=part_n)
+    # write single concat file
+    else: 
+        constituents_concat, particle_feature_names, features_concat, dijet_feature_names = reader.read_events_from_dir(max_n=max_n, **cuts)
         write_file([constituents_concat, particle_feature_names, features_concat, dijet_feature_names], keys=keys, file_name=file_name)
 
 
