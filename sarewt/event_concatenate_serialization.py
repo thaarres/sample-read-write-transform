@@ -4,10 +4,10 @@ import numpy as np
 import data_reader as dr
 import data_writer as dw
 
-def compute_num_file_parts(constituents, features, sz_mb):
-    sz_mb_total = (constituents.nbytes + features.nbytes) / 1024**2
-    n_parts = int(np.ceil(sz_mb_total/sz_mb))
-    print('divinding dataset of size {:6.2f} MB into {:d} chunks of size {:6.2f} MB'.format(sz_mb_total, n_parts, sz_mb))
+def compute_num_file_parts(constituents, features, mb_sz):
+    mb_sz_total = (constituents.nbytes + features.nbytes) / 1024**2
+    n_parts = int(np.ceil(mb_sz_total/mb_sz))
+    print('divinding dataset of size {:6.2f} MB into {:d} chunks of size {:6.2f} MB'.format(mb_sz_total, n_parts, mb_sz))
     return n_parts
 
 
@@ -15,8 +15,8 @@ def split_concat_data(constituents, features, n_parts):
     return [np.array_split(constituents, n_parts), np.array_split(features, n_parts)]
 
 
-def write_file_parts(constituents, constituent_names, features, feature_names, keys, file_name, sz_mb):
-    n_file_parts = compute_num_file_parts(constituents, features, sz_mb)
+def write_file_parts(constituents, constituent_names, features, feature_names, keys, file_name, mb_sz):
+    n_file_parts = compute_num_file_parts(constituents, features, mb_sz)
     constituents_parts, features_parts = split_concat_data(constituents, features, n_file_parts)
     for i, (constituents_i, features_i) in enumerate(zip(constituents_parts, features_parts)):
         write_single_file([constituents_i, constituent_names, features_i, feature_names], keys, file_name, i)        
@@ -31,7 +31,7 @@ def write_file(data, keys, file_name):
     dw.write_data_to_file(data, keys, file_name)
 
 
-def read_concat_write(indir, file_name, max_n, sz_mb, side, sigreg):    
+def read_concat_write(indir, file_name, max_n, mb_sz, side, sigreg):    
     reader = dr.DataReader(indir)
     cuts = {'mJJ': 1100.}
     if side:
@@ -41,9 +41,9 @@ def read_concat_write(indir, file_name, max_n, sz_mb, side, sigreg):
     
     keys = [l.encode('utf-8') for l in ['jetConstituentsList', 'particleFeatureNames', 'eventFeatures', 'eventFeatureNames']]
     # write multiple file parts
-    if sz_mb:
+    if mb_sz:
         particle_feature_names, dijet_feature_names = reader.read_labels_from_dir() 
-        for part_n, (constituents_concat, features_concat) in enumerate(reader.read_event_parts_from_dir(sz_mb, **cuts))
+        for part_n, (constituents_concat, features_concat) in enumerate(reader.read_event_parts_from_dir(max_sz=mb_sz, **cuts))
             write_single_file_part([constituents_concat, particle_feature_names, features_concat, dijet_feature_names], keys=keys, file_name=file_name, part_n=part_n)
     # write single concat file
     else: 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     parser.add_argument('-in', dest='indir', type=str, help='input directory')
     parser.add_argument('-out', dest='outfile', type=str, default='out.h5', help='output file name/path')
     parser.add_argument('-n', dest='num_evts', type=int, default=1e9, help='max number of events for output dataset')
-    parser.add_argument('-mb', dest='sz_mb', type=int, help='split concatenated dataset in multiple files, each of size mb [MB]')
+    parser.add_argument('-mb', dest='mb_sz', type=int, help='split concatenated dataset in multiple files, each of size mb [MB]')
     parser.add_argument('--side', dest='side', action='store_true', help='|dEta| > 1.4 sideband')
     parser.add_argument('--signal', dest='sigreg', action='store_true', help='|dEta| <= 1.4  signalregion')
 
@@ -65,4 +65,4 @@ if __name__ == "__main__":
 
     print('concatenating data in', args.indir)
 
-    read_concat_write(args.indir, args.outfile, args.num_evts, args.sz_mb, args.side, args.sigreg)
+    read_concat_write(args.indir, args.outfile, args.num_evts, args.mb_sz, args.side, args.sigreg)
