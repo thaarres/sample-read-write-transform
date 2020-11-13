@@ -76,6 +76,18 @@ class DataReader():
             constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=np.abs(features[:, -2]), filter_val=cuts['signalregion'], comp=operator.le)
         return constituents, features
 
+    def generate_events_from_dir(self, max_sz=1e9):
+        # return generator
+        pass
+
+    def __next__(self):
+        # get next item from generator
+        constituents, features = self.read_constituents_and_dijet_features_from_file(fname)
+        if len(features) > max_sz:
+            yield [constituents, features]
+            constituents = [], features = []
+        pass
+
 
     def read_events_from_dir(self, max_n=1e9, features_to_df=False, **cuts):
         '''
@@ -106,13 +118,7 @@ class DataReader():
 
         print('\nnum files read in dir ', self.path, ': ', i_file + 1)
 
-        for i_file, fname in enumerate(flist):
-            try:
-                particle_feature_names = self.read_labels(self.constituents_feature_names, fname)
-                dijet_feature_names = self.read_labels(self.dijet_feature_names, fname)
-                break
-            except Exception as e:
-                print("\nCould not read file ", fname, ': ', repr(e))
+        particle_feature_names, dijet_feature_names = self.read_labels_from_dir(flist)
 
         features = pd.DataFrame(np.asarray(features_concat),columns=dijet_feature_names) if features_to_df else np.asarray(features_concat)
         return [np.asarray(constituents_concat), particle_feature_names, features, dijet_feature_names]
@@ -144,14 +150,26 @@ class DataReader():
 
         print('{} events read in {} files in dir {}'.format(np.asarray(features_concat).shape[0], i_file + 1, self.path))
 
+        dijet_feature_names, = self.read_labels_from_dir(flist=flist, keylist=[self.dijet_feature_names])
+
+        return [np.asarray(features_concat), dijet_feature_names]
+
+
+    def read_labels_from_dir(self, flist=None, keylist=None):
+        if flist is None:
+            flist = self.get_file_list()
+        if keylist is None:
+            keylist = [self.constituents_feature_names, self.dijet_feature_names]
+
+        labels = []
         for i_file, fname in enumerate(flist):
             try:
-                dijet_feature_names = self.read_labels(self.dijet_feature_names, fname)
+                for key in keylist:
+                    labels.append(self.read_labels(key, fname))
                 break
             except Exception as e:
                 print("\nCould not read file ", fname, ': ', repr(e))
-
-        return [np.asarray(features_concat), dijet_feature_names]
+        return labels
 
 
     def read_jet_features_from_dir_to_df(self, apply_mjj_cut=True):
