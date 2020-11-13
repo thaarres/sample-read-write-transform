@@ -112,7 +112,7 @@ class DataReader():
 			features_concat.extend(features)
 			sz_mb_total = (np.asarray(constituents_concat).nbytes + np.asarray(features_concat).nbytes) / 1024**2
 			if sz_mb_total > max_sz: # if event sample size exceeding max size, yield next chunk and reset
-				print('\nnum files read for file part ', self.path, ': ', i_file + 1 - n_file) 
+				print('\nnum files read for file part from ', self.path, ': ', i_file + 1 - n_file) 
 				yield (np.asarray(constituents_concat), np.asarray(features_concat))
 				constituents_concat = []
 				features_concat = []
