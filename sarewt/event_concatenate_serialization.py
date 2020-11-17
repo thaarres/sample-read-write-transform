@@ -49,7 +49,8 @@ def read_concat_write(indir, file_name, max_n, mb_sz, side, sigreg):
     particle_feature_names, dijet_feature_names = encode_uf8(reader.read_labels_from_dir())
     # write multiple file parts
     if mb_sz:
-        for part_n, (constituents_concat, features_concat) in enumerate(reader.read_event_parts_from_dir(max_sz=mb_sz, **cuts)):
+        for part_n, (constituents_concat, features_concat) in enumerate(reader.read_event_parts_from_dir(min_sz_mb=mb_sz, **cuts)):
+            print('writing file no {} with {} events'.format(part_n, len(features_concat)))
             write_single_file_part([constituents_concat, particle_feature_names, features_concat, dijet_feature_names], keys=keys, file_name=file_name, part_n=part_n)
     # write single concat file
     else: 

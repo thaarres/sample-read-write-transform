@@ -94,9 +94,11 @@ class DataReader():
 		return np.asarray(constituents), np.asarray(features)
 
 
-	def read_event_parts_from_dir(self, max_sz_mb=1e9, **cuts):
+	def read_event_parts_from_dir(self, min_sz_mb=1e9, min_n=1e9, **cuts):
 		'''
 		file parts generator
+		yields events in file-size granularity chunks
+		min_sz_mb must be < total size of data or min_n must be < total number of samples, otherwise yields nothing 
 		'''
 		print('reading', self.path)
 
@@ -111,7 +113,7 @@ class DataReader():
 			constituents_concat.extend(constituents)
 			features_concat.extend(features)
 			sz_mb_total = (np.asarray(constituents_concat).nbytes + np.asarray(features_concat).nbytes) / 1024**2
-			if sz_mb_total > max_sz_mb: # if event sample size exceeding max size, yield next chunk and reset
+			if (sz_mb_total > min_sz_mb) or (len(features_concat) > min_n): # if event sample size exceeding max size or min n, yield next chunk and reset
 				print('\nnum files read for file part from ', self.path, ': ', i_file + 1 - n_file) 
 				yield (np.asarray(constituents_concat), np.asarray(features_concat))
 				constituents_concat = []
@@ -147,15 +149,15 @@ class DataReader():
 		return [np.asarray(constituents_concat), particle_feature_names, features, dijet_feature_names]
 
 
-	def read_constituents_from_dir(self):
+	def read_constituents_from_dir(self, max_n=1e9):
 		''' read constituents of jet 1 and jet 2 from all file parts in directory '''
-		constituents, *_ = self.read_events_from_dir()
+		constituents, *_ = self.read_events_from_dir(max_n=max_n)
 		return constituents
 
 
-	def read_constituents_parts_from_dir(self, max_sz_mb):
-		for (constituents, features) in self.read_event_parts_from_dir(max_sz_mb=max_sz_mb):
-			yield constituents
+	def read_constituents_parts_from_dir(self, min_sz_mb=1e9, min_n=1e9):
+		for (constituents, features) in self.read_event_parts_from_dir(min_sz_mb=min_sz_mb, min_n=min_n):
+			yield constituents # file(!) sized chunks
 
 
 	def read_jet_features_from_dir(self, apply_mjj_cut=True):
