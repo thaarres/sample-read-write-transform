@@ -119,6 +119,9 @@ class DataReader():
 				constituents_concat = []
 				features_concat = []
 				n_file = i_file + 1
+		# if data left, yield it
+		if features_concat:
+			yield (np.asarray(constituents_concat), np.asarray(features_concat))
 
 
 	def read_events_from_dir(self, max_n=1e9, features_to_df=False, **cuts):
