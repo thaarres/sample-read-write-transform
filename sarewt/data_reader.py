@@ -41,9 +41,10 @@ class DataReader():
 
 
 	def read_constituents_and_dijet_features_from_file(self, path, dtype='float32'):
+		''' returns file contents (constituents and features) as numpy arrays '''
 		with h5py.File(path,'r') as f:
-			features = np.array(f.get(self.jet_features_key), dtype=dtype)
-			constituents = np.array(f.get(self.jet_constituents_key), dtype=dtype)
+			features = np.asarray(f.get(self.jet_features_key), dtype=dtype)
+			constituents = np.asarray(f.get(self.jet_constituents_key), dtype=dtype)
 			return [constituents, features]
 
 
