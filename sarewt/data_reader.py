@@ -81,9 +81,9 @@ class DataReader():
 	def read_events_from_file(self, fname, **cuts):
 		
 		try:
-			constituents, features = self.read_constituents_and_dijet_features_from_file(fname)
+			constituents, features = self.read_constituents_and_dijet_features_from_file(fname) # -> np.ndarray, np.ndarray
 			if cuts:
-				constituents, features = self.make_cuts(constituents, features, **cuts)
+				constituents, features = self.make_cuts(constituents, features, **cuts) # -> np.ndarray, np.ndarray
 		except OSError as e:
 			print("\n[ERROR] Could not read file ", fname, ': ', repr(e))
 		except IndexError as e:
@@ -118,7 +118,7 @@ class DataReader():
 			yield (np.asarray(constituents_concat), np.asarray(features_concat))
 
 
-	def generate_event_parts_by_num(self, parts_n, **cuts):
+	def generate_event_parts_by_num(self, parts_n, flist, **cuts):
 		constituents_concat = []
 		features_concat = []
 
@@ -136,7 +136,7 @@ class DataReader():
 
 
 
-	def generate_event_parts_from_dir(self, parts_sz_mb=None, parts_n=None, **cuts):
+	def generate_event_parts_from_dir(self, parts_n=None, parts_sz_mb=None, **cuts):
 		'''
 		file parts generator
 		yields events in file-size granularity chunks
@@ -145,12 +145,12 @@ class DataReader():
 		if not (parts_sz_mb or parts_n):
 			return self.read_events_from_dir(**cuts)
 
-		if parts_n is not None:
-			# check chunk for number of samples
-			chunk_check = lambda c, f, lim : len(f) >= lim
-		else: 
-			# check chunk for size of samples
-			chunk_check = lambda c, f, lim : ((np.asarray(c).nbytes + np.asarray(f).nbytes) / 1024**2) >= lim
+		# if parts_n is not None:
+		# 	# check chunk for number of samples
+		# 	chunk_check = lambda c, f, lim : len(f) >= lim
+		# else: 
+		# 	# check chunk for size of samples
+		# 	chunk_check = lambda c, f, lim : ((np.asarray(c).nbytes + np.asarray(f).nbytes) / 1024**2) >= lim
 
 		print('reading', self.path)
 
@@ -159,6 +159,14 @@ class DataReader():
 		n_file = 0
 
 		flist = self.get_file_list()
+
+		if parts_n is not None:
+			gen = generate_event_parts_by_num(parts_n, flist, **cuts)
+		else: 
+			gen = generate_event_parts_by_size(parts_sz_mb, flist, **cuts)
+
+		for chunk in gen: 
+			yield chunk
 
 		for i_file, fname in enumerate(flist):
 			constituents, features = self.read_events_from_file(fname, **cuts)
