@@ -35,16 +35,36 @@ class DataReaderTestCase(unittest.TestCase):
 
 
 	# test event chunk generation from dir with num events splitting
-	@unittest.skip
-	def test_num_events_generated_by_num(self):
+	def test_events_generated_by_num(self):
+
 		read_events_n = 0
-		read_files_n = 0
-		for (constituents, features) in self.reader.generate_event_parts_from_dir(parts_n=1000):
-			pass
+		parts_n = 1500
+		
+		for (constituents, features) in self.reader.generate_event_parts_from_dir(parts_n=parts_n):
+		
+			# check number of events read
+			self.assertLessEqual(len(constituents), parts_n)
+			self.assertEqual(len(constituents), len(features))
+			self.assertGreater(len(constituents), 0)
+			read_events_n += len(constituents)
+		
+			# check shape of events read
+			self.assertEqual(len(constituents.shape), 4)
+			self.assertEqual(constituents.shape[1], 2) # 2 jets
+			self.assertEqual(constituents.shape[2], 100) # 100 particles
+			self.assertEqual(constituents.shape[3], 3) # eta, phi, pt
+			self.assertEqual(len(features.shape), 2)
+			self.assertEqual(features.shape[1], 11) # 11 features
+
+
+		# check that all events in dir have been read	
+		self.assertEqual(read_events_n, 57964+36+58096)
 
 
 	# test event chunk generation from dir with size events splitting 
-
+	# TODO: implement
+	def test_events_generated_by_size(self):
+		pass
 
 
 	# test applying cuts to event sets
