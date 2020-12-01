@@ -148,6 +148,7 @@ class DataReader():
 				constituents_part, constituents_concat = constituents_concat[:parts_n], constituents_concat[parts_n:] # makes copy of *references* to ndarrays 
 				features_part, features_concat = features_concat[:parts_n], features_concat[parts_n:]
 				yield (np.asarray(constituents_part), np.asarray(features_part)) # makes copy of all data, s.t. yielded chunk is new(!) array (since *_part is a list) => TODO: CHECK!
+		
 		# if data left, yield it
 		if features_concat:
 			yield (np.asarray(constituents_concat), np.asarray(features_concat))
@@ -176,13 +177,13 @@ class DataReader():
 			yield chunk
 
 
-	def read_events_from_dir(self, max_n=1e9, features_to_df=False, **cuts):
+	def read_events_from_dir(self, max_n=None, features_to_df=False, **cuts):
 		'''
 		read dijet events (jet constituents & jet features) from files in directory
 		:param max_n: limit number of events
 		:return: concatenated jet constituents and jet feature array + corresponding particle feature names and event feature names
 		'''
-		print('reading', self.path)
+		print('[DataReader] read_events_from_dir(): reading', self.path)
 
 		constituents_concat = []
 		features_concat = []
@@ -193,7 +194,8 @@ class DataReader():
 			constituents, features = self.read_events_from_file(fname, **cuts)
 			constituents_concat.extend(constituents)
 			features_concat.extend(features)
-			if len(constituents_concat) > max_n:
+			if max_n is not None and (len(constituents_concat) >= max_n):
+				constituents_concat, features_concat = constituents_concat[:max_n], features_concat[:max_n]
 				break
 
 		print('\nnum files read in dir ', self.path, ': ', i_file + 1)
