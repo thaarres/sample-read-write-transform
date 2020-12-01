@@ -33,7 +33,6 @@ class DataReaderTestCase(unittest.TestCase):
 		self.assertAlmostEqual(np.mean(features[:,-1]), 0.002353363388548727, places=3)
 
 
-
 	# test event chunk generation from dir with num events splitting
 	def test_events_generated_by_num(self):
 
@@ -56,6 +55,29 @@ class DataReaderTestCase(unittest.TestCase):
 			self.assertEqual(len(features.shape), 2)
 			self.assertEqual(features.shape[1], 11) # 11 features
 
+
+		# check that all events in dir have been read	
+		self.assertEqual(read_events_n, 57964+36+58096)
+
+
+	# test event chunk generation from dir with num events splitting
+	def test_constituents_generated_by_num(self):
+
+		read_events_n = 0
+		parts_n = 2500
+		
+		for constituents in self.reader.generate_constituents_parts_from_dir(parts_n=parts_n):
+		
+			# check number of events read
+			self.assertLessEqual(len(constituents), parts_n)
+			self.assertGreater(len(constituents), 0)
+			read_events_n += len(constituents)
+		
+			# check shape of events read
+			self.assertEqual(len(constituents.shape), 4)
+			self.assertEqual(constituents.shape[1], 2) # 2 jets
+			self.assertEqual(constituents.shape[2], 100) # 100 particles
+			self.assertEqual(constituents.shape[3], 3) # eta, phi, pt
 
 		# check that all events in dir have been read	
 		self.assertEqual(read_events_n, 57964+36+58096)

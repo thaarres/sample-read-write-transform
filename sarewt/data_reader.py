@@ -136,6 +136,7 @@ class DataReader():
 
 
 	def generate_event_parts_by_num(self, parts_n, flist, **cuts):
+		print('[DataReader]: generate_event_parts_by_num() first call')
 		# keeping data in lists for performance
 		constituents_concat = []
 		features_concat = []
@@ -146,7 +147,7 @@ class DataReader():
 			while (len(features_concat) >= parts_n): # if event sample size exceeding max size or min n, yield next chunk and reset
 				constituents_part, constituents_concat = constituents_concat[:parts_n], constituents_concat[parts_n:] # makes copy of *references* to ndarrays 
 				features_part, features_concat = features_concat[:parts_n], features_concat[parts_n:]
-				yield (np.asarray(constituents_part), np.asarray(features_part))
+				yield (np.asarray(constituents_part), np.asarray(features_part)) # makes copy of all data, s.t. yielded chunk is new(!) array (since *_part is a list) => TODO: CHECK!
 		# if data left, yield it
 		if features_concat:
 			yield (np.asarray(constituents_concat), np.asarray(features_concat))
@@ -158,7 +159,7 @@ class DataReader():
 		yields events in parts_n (number of events) or parts_sz_mb (size of events) chunks
 		'''
 		
-		print('reading', self.path)
+		print('[DataReader] generate_event_parts_from_dir(): reading', self.path)
 		
 		# if no chunk size or chunk number given, return all events in all files of directory
 		if not (parts_sz_mb or parts_n):
@@ -167,7 +168,7 @@ class DataReader():
 		flist = self.get_file_list()
 
 		if parts_n is not None:
-			gen = self.generate_event_parts_by_num(parts_n, flist, **cuts)
+			gen = self.generate_event_parts_by_num(int(parts_n), flist, **cuts)
 		else: 
 			gen = self.generate_event_parts_by_size(parts_sz_mb, flist, **cuts)
 
@@ -209,7 +210,7 @@ class DataReader():
 		return constituents
 
 
-	def read_constituents_parts_from_dir(self, parts_sz_mb=None, parts_n=None):
+	def generate_constituents_parts_from_dir(self, parts_sz_mb=None, parts_n=None):
 		for (constituents, features) in self.generate_event_parts_from_dir(parts_sz_mb=parts_sz_mb, parts_n=parts_n):
 			yield constituents # -> np.ndarray parts_n or parts_sz_mb sized chunks
 
@@ -278,6 +279,10 @@ class DataReader():
 				labels = []
 
 		return labels
+
+
+	def __del__(self):
+		print('[DataReader] deleting...')
 
 
 
