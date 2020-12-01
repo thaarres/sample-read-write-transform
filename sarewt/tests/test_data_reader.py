@@ -10,10 +10,12 @@ class DataReaderTestCase(unittest.TestCase):
 	def setUp(self):
 		self.dir_path = '/eos/user/k/kiwoznia/data/VAE_data/baby_events/qcd_sqrtshatTeV_13TeV_PU40'
 		self.reader = dare.DataReader(self.dir_path)
-		self.file_paths = fnames = [os.path.join(self.dir_path, 'qcd_sqrtshatTeV_13TeV_PU40_'+str(n)+'.h5') for n in [34,721,96]] 
+		self.file_paths = fnames = [os.path.join(self.dir_path, 'qcd_sqrtshatTeV_13TeV_PU40_'+str(n)+'.h5') for n in [34,721,96]]
+		self.total_num_events_in_dir = 57964 + 36 + 58096
 
 
 	# test reading events from single file
+	@unittest.skip
 	def test_read_events_from_file_no_cuts(self):
 		constituents, features = self.reader.read_events_from_file(self.file_paths[0])
 		self.assertEqual(constituents.shape, (57964, 2, 100, 3))
@@ -33,7 +35,38 @@ class DataReaderTestCase(unittest.TestCase):
 		self.assertAlmostEqual(np.mean(features[:,-1]), 0.002353363388548727, places=3)
 
 
+	# test read events from dir no cuts
+	def test_read_events_from_dir_number(self):
+
+		# check reading with no limit on number
+		constituents, features = self.reader.read_events_from_dir()
+		self.assertEqual(len(features), self.total_num_events_in_dir)
+		self.assertEqual(len(constituents), len(features))
+			# check shape of events read
+		self.assertEqual(len(constituents.shape), 4)
+		self.assertEqual(constituents.shape[1], 2) # 2 jets
+		self.assertEqual(constituents.shape[2], 100) # 100 particles
+		self.assertEqual(constituents.shape[3], 3) # eta, phi, pt
+		self.assertEqual(len(features.shape), 2)
+		self.assertEqual(features.shape[1], 11) # 11 features
+
+		# check reading with limit on number
+		num_samples_to_read = 77000
+		constituents, features = self.reader.read_events_from_dir()
+		self.assertEqual(len(features), num_samples_to_read)
+		self.assertEqual(len(constituents), len(features))
+			# check shape of events read
+		self.assertEqual(len(constituents.shape), 4)
+		self.assertEqual(constituents.shape[1], 2) # 2 jets
+		self.assertEqual(constituents.shape[2], 100) # 100 particles
+		self.assertEqual(constituents.shape[3], 3) # eta, phi, pt
+		self.assertEqual(len(features.shape), 2)
+		self.assertEqual(features.shape[1], 11) # 11 features
+
+
+
 	# test event chunk generation from dir with num events splitting
+	@unittest.skip
 	def test_events_generated_by_num(self):
 
 		read_events_n = 0
@@ -57,10 +90,11 @@ class DataReaderTestCase(unittest.TestCase):
 
 
 		# check that all events in dir have been read	
-		self.assertEqual(read_events_n, 57964+36+58096)
+		self.assertEqual(read_events_n, self.total_num_events_in_dir)
 
 
 	# test event chunk generation from dir with num events splitting
+	@unittest.skip
 	def test_constituents_generated_by_num(self):
 
 		read_events_n = 0
@@ -85,11 +119,13 @@ class DataReaderTestCase(unittest.TestCase):
 
 	# test event chunk generation from dir with size events splitting 
 	# TODO: implement
+	@unittest.skip
 	def test_events_generated_by_size(self):
 		pass
 
 
 	# test applying cuts to event sets
+	@unittest.skip
 	def test_make_cuts(self):
 
 		idx_mjj, idx_dEta, idx_dPhi = 0, -2, -1
