@@ -39,9 +39,11 @@ class DataReaderTestCase(unittest.TestCase):
 	def test_read_events_from_dir_number(self):
 
 		# check reading with no limit on number
-		constituents, features = self.reader.read_events_from_dir()
+		constituents, constituents_names, features, features_names = self.reader.read_events_from_dir()
 		self.assertEqual(len(features), self.total_num_events_in_dir)
 		self.assertEqual(len(constituents), len(features))
+		self.assertEqual(len(constituents_names), 3)
+		self.assertEqual(len(features_names), 11)
 			# check shape of events read
 		self.assertEqual(len(constituents.shape), 4)
 		self.assertEqual(constituents.shape[1], 2) # 2 jets
@@ -52,9 +54,12 @@ class DataReaderTestCase(unittest.TestCase):
 
 		# check reading with limit on number
 		num_samples_to_read = 77000
-		constituents, features = self.reader.read_events_from_dir()
+		constituents, constituents_names, features, features_names = self.reader.read_events_from_dir(read_n=num_samples_to_read)
 		self.assertEqual(len(features), num_samples_to_read)
 		self.assertEqual(len(constituents), len(features))
+		self.assertEqual(len(constituents_names), 3)
+		self.assertEqual(len(features_names), 11)
+
 			# check shape of events read
 		self.assertEqual(len(constituents.shape), 4)
 		self.assertEqual(constituents.shape[1], 2) # 2 jets

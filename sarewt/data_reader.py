@@ -177,10 +177,10 @@ class DataReader():
 			yield chunk
 
 
-	def read_events_from_dir(self, max_n=None, features_to_df=False, **cuts):
+	def read_events_from_dir(self, read_n=None, features_to_df=False, **cuts): # -> np.ndarray, list, np.ndarray, list
 		'''
 		read dijet events (jet constituents & jet features) from files in directory
-		:param max_n: limit number of events
+		:param read_n: limit number of events
 		:return: concatenated jet constituents and jet feature array + corresponding particle feature names and event feature names
 		'''
 		print('[DataReader] read_events_from_dir(): reading', self.path)
@@ -194,8 +194,8 @@ class DataReader():
 			constituents, features = self.read_events_from_file(fname, **cuts)
 			constituents_concat.extend(constituents)
 			features_concat.extend(features)
-			if max_n is not None and (len(constituents_concat) >= max_n):
-				constituents_concat, features_concat = constituents_concat[:max_n], features_concat[:max_n]
+			if read_n is not None and (len(constituents_concat) >= read_n):
+				constituents_concat, features_concat = constituents_concat[:read_n], features_concat[:read_n]
 				break
 
 		print('\nnum files read in dir ', self.path, ': ', i_file + 1)
