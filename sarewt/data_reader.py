@@ -182,27 +182,29 @@ class DataReader():
         :param read_n: limit number of events
         :return: concatenated jet constituents and jet feature array + corresponding particle feature names and event feature names
         '''
-        print('[DataReader] read_events_from_dir(): reading {} events from {}'.format((read_n if read_n else None), self.path))
+        print('[DataReader] read_events_from_dir(): reading {} events from {}'.format((read_n or 'all'), self.path))
 
         constituents_concat = []
         features_concat = []
 
         flist = self.get_file_list()
+        n = 0
 
         for i_file, fname in enumerate(flist):
             constituents, features = self.read_events_from_file(fname, **cuts)
-            constituents_concat.extend(constituents)
-            features_concat.extend(features)
-            if read_n is not None and (len(constituents_concat) >= read_n):
-                constituents_concat, features_concat = constituents_concat[:read_n], features_concat[:read_n]
+            constituents_concat.append(constituents)
+            features_concat.append(features)
+            n += len(features)
+            if read_n is not None and (n >= read_n):
                 break
 
+        constituents_concat, features_concat = np.concatenate(constituents_concat, axis=0)[:read_n], np.concatenate(features_concat, axis=0)[:read_n]
         print('\nnum files read in dir ', self.path, ': ', i_file + 1)
 
         particle_feature_names, dijet_feature_names = self.read_labels_from_dir(flist)
 
-        features = pd.DataFrame(np.asarray(features_concat),columns=dijet_feature_names) if features_to_df else np.asarray(features_concat)
-        return [np.asarray(constituents_concat), particle_feature_names, features, dijet_feature_names]
+        features = pd.DataFrame(features_concat,columns=dijet_feature_names) if features_to_df else features_concat
+        return [constituents_concat, particle_feature_names, features, dijet_feature_names]
 
 
     def read_constituents_from_dir(self, read_n=None): # -> np.ndarray [n x 2 x 100 x 3]
