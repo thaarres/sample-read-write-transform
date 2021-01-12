@@ -252,8 +252,11 @@ class DataReader():
         '''
         return self.read_data_from_file(self.jet_constituents_key)
 
-    def read_jet_features_from_file(self):
-        return self.read_data_from_file(self.jet_features_key)
+    def read_jet_features_from_file(self, features_to_df=False):
+        features = self.read_data_from_file(self.jet_features_key)
+        if features_to_df:
+            features = pd.DataFrame(features, names=self.read_labels_from_file(self.dijet_feature_names))
+        return features
 
     def read_labels(self, key=None, path=None):
         key = key or self.dijet_feature_names
