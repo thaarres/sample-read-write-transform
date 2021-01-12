@@ -217,7 +217,7 @@ class DataReader():
 
 
     def read_jet_features_from_dir(self, read_n=None, apply_mjj_cut=True):
-        ''' TODO: adapt to new version of cutting: makes_cuts() vs filter_arrays_on_value, add support for read_n number of events limit '''
+        ''' TODO: adapt to new version of cutting: makes_cuts() vs filter_arrays_on_value, change to more performant list.append + np.concat procedure (vs list.extend) '''
 
         features_concat = []
 
@@ -233,6 +233,9 @@ class DataReader():
                 print("\nCould not read file ", fname, ': ', repr(e))
             except IndexError as e:
                 print("\nNo data in file ", fname, ':', repr(e))
+            if read_n and (len(features_concat) >= read_n):
+                features_concat = features_concat[:read_n]
+                break
 
         print('{} events read in {} files in dir {}'.format(np.asarray(features_concat).shape[0], i_file + 1, self.path))
 
@@ -255,7 +258,7 @@ class DataReader():
     def read_jet_features_from_file(self, features_to_df=False):
         features = self.read_data_from_file(self.jet_features_key)
         if features_to_df:
-            features = pd.DataFrame(features, names=self.read_labels_from_file(self.dijet_feature_names))
+            features = pd.DataFrame(features, columns=self.read_labels_from_file(self.dijet_feature_names))
         return features
 
     def read_labels(self, key=None, path=None):
