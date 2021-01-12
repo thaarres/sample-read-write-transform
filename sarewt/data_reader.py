@@ -219,10 +219,11 @@ class DataReader():
 
 
     def read_jet_features_from_dir(self, read_n=None, apply_mjj_cut=True):
-        ''' TODO: adapt to new version of cutting: makes_cuts() vs filter_arrays_on_value, change to more performant list.append + np.concat procedure (vs list.extend) '''
+        ''' TODO: adapt to new version of cutting: makes_cuts() vs filter_arrays_on_value '''
+        print('[DataReader] read_jet_features_from_dir(): reading {} events from {}'.format((read_n or 'all'), self.path))
 
         features_concat = []
-
+        n = 0
         flist = self.get_file_list()
 
         for i_file, fname in enumerate(flist):
@@ -230,20 +231,21 @@ class DataReader():
                 features = self.read_data_from_file(key=self.jet_features_key, path=fname)
                 if apply_mjj_cut:
                     features, = ut.filter_arrays_on_value(features, filter_arr=features[:, 0], filter_val=self.mjj_cut) # 0: mjj_idx # TODO: when filter() is passed only one array, has to be unpacked by caller as a, = filter() => need to change variadic *arrays argument!
-                features_concat.extend(features)
+                features_concat.append(features)
+                n += len(features)
             except OSError as e:
                 print("\nCould not read file ", fname, ': ', repr(e))
             except IndexError as e:
                 print("\nNo data in file ", fname, ':', repr(e))
-            if read_n and (len(features_concat) >= read_n):
-                features_concat = features_concat[:read_n]
+            if read_n and (n >= read_n):
                 break
 
-        print('{} events read in {} files in dir {}'.format(np.asarray(features_concat).shape[0], i_file + 1, self.path))
+        features_concat = np.concatenate(features_concat, axis=0)[:read_n]
+        print('{} events read in {} files in dir {}'.format(features_concat.shape[0], i_file + 1, self.path))
 
         dijet_feature_names, = self.read_labels_from_dir(flist=flist, keylist=[self.dijet_feature_names])
 
-        return [np.asarray(features_concat), dijet_feature_names]
+        return [features_concat, dijet_feature_names]
 
 
     def read_jet_features_from_dir_to_df(self, read_n=None, apply_mjj_cut=True):

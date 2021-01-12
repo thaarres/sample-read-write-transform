@@ -15,7 +15,7 @@ class DataReaderTestCase(unittest.TestCase):
 
 
 	# test reading events from single file
-	@unittest.skip
+	# @unittest.skip
 	def test_read_events_from_file_no_cuts(self):
 		constituents, features = self.reader.read_events_from_file(self.file_paths[0])
 		self.assertEqual(constituents.shape, (57964, 2, 100, 3))
@@ -68,6 +68,27 @@ class DataReaderTestCase(unittest.TestCase):
 		self.assertEqual(len(features.shape), 2)
 		self.assertEqual(features.shape[1], 11) # 11 features
 
+
+	# test read jet features from dir no cuts
+	def test_read_jet_features_from_dir_number(self):
+
+		# check reading with no limit on number
+		features, features_names = self.reader.read_jet_features_from_dir(apply_mjj_cut=False)
+		self.assertEqual(len(features), self.total_num_events_in_dir)
+		self.assertEqual(len(features_names), 11)
+			# check shape of events read
+		self.assertEqual(len(features.shape), 2)
+		self.assertEqual(features.shape[1], 11) # 11 features
+
+		# check reading with limit on number
+		num_samples_to_read = 66000
+		features, features_names = self.reader.read_jet_features_from_dir(read_n=num_samples_to_read, apply_mjj_cut=False)
+		self.assertEqual(len(features), num_samples_to_read)
+		self.assertEqual(len(features_names), 11)
+
+			# check shape of events read
+		self.assertEqual(len(features.shape), 2)
+		self.assertEqual(features.shape[1], 11) # 11 features
 
 
 	# test event chunk generation from dir with num events splitting
