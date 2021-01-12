@@ -256,10 +256,8 @@ class DataReader():
         return self.read_data_from_file(self.jet_features_key)
 
     def read_labels(self, key=None, path=None):
-        if key is None:
-            key = self.dijet_feature_names
-        if path is None:
-            path = self.path
+        key = key or self.dijet_feature_names
+        path = path or self.path
         return [ l.decode("utf-8") for l in self.read_data_from_file(key, path) ] # decode to unicode if (from byte str of Python2)
 
     def read_labels_from_file(self, fname=None, keylist=None):
@@ -278,7 +276,7 @@ class DataReader():
 
         for i_file, fname in enumerate(flist):
             try:
-                labels = self.read_labels_from_file(i_file)
+                labels = self.read_labels_from_file(fname=fname, keylist=keylist)
                 break
             except Exception as e:
                 print("\nCould not read file ", fname, ': ', repr(e))
