@@ -151,7 +151,7 @@ class DataReaderTestCase(unittest.TestCase):
 
 
 	# test applying cuts to event sets
-	@unittest.skip
+	# @unittest.skip
 	def test_make_cuts(self):
 
 		idx_mjj, idx_dEta, idx_dPhi = 0, -2, -1
