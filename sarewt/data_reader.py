@@ -71,12 +71,8 @@ class DataReader():
 
 
     def make_cuts(self, constituents, features, **cuts):
-        if 'mJJ' in cuts:
-            constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=features[:, 0], filter_val=cuts['mJJ'])
-        if 'sideband' in cuts:
-            constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=np.abs(features[:, -2]), filter_val=cuts['sideband'])
-        if 'signalregion' in cuts:
-            constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=np.abs(features[:, -2]), filter_val=cuts['signalregion'], comp=operator.le)
+        mask = ut.get_mask_for_cuts(features, cuts)
+        constituents, features = ut.mask_arrays(constituents, features, mask)
         return constituents, features
 
 

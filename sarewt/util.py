@@ -11,8 +11,9 @@ def mask_arrays(*arrays, mask):
     return [a[idx_after_cut] for a in arrays] # a[multi_idx] = smart idx => data copied in result (unlike slicing)
 
 
-def get_mask_for_cuts(cut_dict, features):
-
+def get_mask_for_cuts(features, cut_dict):
+    ''' create mask for events based on jet-feature values '''
+    
     mask = np.ones(len(features), dtype=bool)
     
     for key, value in cut_dict.items():
