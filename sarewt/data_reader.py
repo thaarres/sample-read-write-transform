@@ -225,7 +225,6 @@ class DataReader():
         features_concat = []
         n = 0
         flist = self.get_file_list()
-
         for i_file, fname in enumerate(flist):
             try:
                 features = self.read_data_from_file(key=self.jet_features_key, path=fname)
