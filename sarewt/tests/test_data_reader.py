@@ -15,7 +15,7 @@ class DataReaderTestCase(unittest.TestCase):
 
 
 	# test reading events from single file
-	# @unittest.skip
+	@unittest.skip
 	def test_read_events_from_file_no_cuts(self):
 		constituents, features = self.reader.read_events_from_file(self.file_paths[0])
 		self.assertEqual(constituents.shape, (57964, 2, 100, 3))
@@ -154,14 +154,13 @@ class DataReaderTestCase(unittest.TestCase):
 	# @unittest.skip
 	def test_make_cuts(self):
 
-		idx_mjj, idx_dEta, idx_dPhi = 0, -2, -1
+		idx_mjj, idx_j1Pt, idx_j2Pt, idx_j1Eta, idx_dEta, idx_dPhi = 0, 1, 6, 2, 9, 10
 
-		before_cut_n = 10
+		before_cut_n = 14
 		constituents = np.ones((before_cut_n,100,3))
 		features = np.ones((before_cut_n,12))
-
 		# check cutting on mJJ
-		features[:, idx_mjj] = [1500, 2000, 3000, 4, 5, 6, 1110, 2220, 9090, 10] 
+		features[:, idx_mjj] = [1500, 2000, 3000, 4, 5, 6, 1110, 2220, 9090, 10, 9876, 5623.3, 34.9, 2365.0] 
 		cuts = {'mJJ': 1100}
 		const_after, features_after = self.reader.make_cuts(constituents, features, **cuts)
 		self.assertEqual(len(const_after),sum(features[:,idx_mjj]>cuts['mJJ']))
@@ -182,7 +181,7 @@ class DataReaderTestCase(unittest.TestCase):
 		self.assertEqual(len(const_after),sum(np.abs(features[:,idx_dEta])<=cuts['signalregion']))
 		self.assertEqual(len(features_after),len(const_after))
 		# mixed
-		features[:, idx_dEta] = [-100, -0.5, 0, 3, 1.4, 1.3, -1.4, -1.4, 200, 10]
+		features[:, idx_dEta] = [-100, -0.5, 0, 3, 1.4, 0.001, 1.3, -1.4, 7236, -1.4, 200, 10, -12.3, 343]
 		cuts = {'sideband': 1.4}
 		const_after, features_after = self.reader.make_cuts(constituents, features, **cuts)
 		self.assertEqual(len(const_after),sum(np.abs(features[:, idx_dEta])>cuts['sideband']))
@@ -195,8 +194,36 @@ class DataReaderTestCase(unittest.TestCase):
 		# mJJ and dEta
 		cuts = {'mJJ': 1100, 'sideband': 1.4}
 		const_after, features_after = self.reader.make_cuts(constituents, features, **cuts)
-		self.assertEqual(len(const_after),sum(np.logical_and(features[:,idx_mjj]>cuts['mJJ'],np.abs(features[:, idx_dEta])>cuts['sideband'])))
-		self.assertEqual(len(features_after),len(const_after)) 
+		self.assertEqual(len(const_after),sum((features[:,idx_mjj]>cuts['mJJ'])*(np.abs(features[:, idx_dEta])>cuts['sideband'])))
+		self.assertEqual(len(features_after),len(const_after))
+
+		# add jetPt cuts
+		# j1Pt
+		features[:, idx_j1Pt] = [100, 200, 150, 300, 1.0, -100, 1234, 400, 12334.83, 1097.212, 0.01234, 34.45, 2, 8782]
+		cuts = {'j1Pt': 200.}
+		const_after, features_after = self.reader.make_cuts(constituents, features, **cuts)
+		self.assertEqual(len(const_after),sum(features[:,idx_j1Pt]>cuts['j1Pt']))
+		self.assertEqual(len(features_after),len(const_after))
+		# j2Pt
+		features[:, idx_j2Pt] = [1000, -3, 15, 300, 331.0, 0, 1., 899, 235.83, 1097.212, 999.9, 0.00202303, 1287.2, 212]
+		cuts = {'j2Pt': 200.}
+		const_after, features_after = self.reader.make_cuts(constituents, features, **cuts)
+		self.assertEqual(len(const_after),sum(features[:,idx_j2Pt]>cuts['j2Pt']))
+		self.assertEqual(len(features_after),len(const_after))
+		# j1Pt & j2Pt
+		cuts = {'j1Pt': 200., 'j2Pt': 200.}
+		const_after, features_after = self.reader.make_cuts(constituents, features, **cuts)
+		self.assertEqual(len(const_after),sum((features[:,idx_j1Pt]>cuts['j1Pt'])*(features[:,idx_j2Pt]>cuts['j2Pt']))
+		self.assertEqual(len(features_after),len(const_after))
+		# j1Pt & j2Pt & mJJ
+		cuts = {'mJJ': 1100, 'j1Pt': 200., 'j2Pt': 200.}
+		const_after, features_after = self.reader.make_cuts(constituents, features, **cuts)
+		self.assertEqual(len(const_after),sum((features[:,idx_j1Pt]>cuts['j1Pt'])*(features[:,idx_j2Pt]>cuts['j2Pt'])*(features[:,idx_mjj]>cuts['mJJ']))
+		self.assertEqual(len(features_after),len(const_after))
+
+		# jetEta cuts
+		
+
 
 
 

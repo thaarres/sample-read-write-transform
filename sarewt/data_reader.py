@@ -72,7 +72,7 @@ class DataReader():
 
     def make_cuts(self, constituents, features, **cuts):
         mask = ut.get_mask_for_cuts(features, cuts)
-        constituents, features = ut.mask_arrays(constituents, features, mask)
+        constituents, features = ut.mask_arrays(constituents, features, mask=mask)
         return constituents, features
 
 
