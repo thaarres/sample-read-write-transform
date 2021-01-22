@@ -213,17 +213,31 @@ class DataReaderTestCase(unittest.TestCase):
 		# j1Pt & j2Pt
 		cuts = {'j1Pt': 200., 'j2Pt': 200.}
 		const_after, features_after = self.reader.make_cuts(constituents, features, **cuts)
-		self.assertEqual(len(const_after),sum((features[:,idx_j1Pt]>cuts['j1Pt'])*(features[:,idx_j2Pt]>cuts['j2Pt']))
+		self.assertEqual(len(const_after),sum((features[:,idx_j1Pt]>cuts['j1Pt'])*(features[:,idx_j2Pt]>cuts['j2Pt'])))
 		self.assertEqual(len(features_after),len(const_after))
 		# j1Pt & j2Pt & mJJ
 		cuts = {'mJJ': 1100, 'j1Pt': 200., 'j2Pt': 200.}
 		const_after, features_after = self.reader.make_cuts(constituents, features, **cuts)
-		self.assertEqual(len(const_after),sum((features[:,idx_j1Pt]>cuts['j1Pt'])*(features[:,idx_j2Pt]>cuts['j2Pt'])*(features[:,idx_mjj]>cuts['mJJ']))
+		self.assertEqual(len(const_after),sum((features[:,idx_j1Pt]>cuts['j1Pt'])*(features[:,idx_j2Pt]>cuts['j2Pt'])*(features[:,idx_mjj]>cuts['mJJ'])))
+		self.assertEqual(len(features_after),len(const_after))
+		# either ptJ1 or ptJ2
+		cuts = {'jXPt': 200.}
+		const_after, features_after = self.reader.make_cuts(constituents, features, **cuts)
+		self.assertEqual(len(const_after),sum((features[:,idx_j1Pt]>cuts['jXPt'])+(features[:,idx_j2Pt]>cuts['jXPt'])))
 		self.assertEqual(len(features_after),len(const_after))
 
 		# jetEta cuts
+		# j1eta
+		features[:, idx_j1Eta] = [-1.123, 2.1, 150, 2.3, 1.0, -100, 1234, 0.4, 4.83, -1.212, 0.01234, 3.45, 2, 0.8782]
+		cuts = {'j1Eta': 2.4}
+		const_after, features_after = self.reader.make_cuts(constituents, features, **cuts)
+		self.assertEqual(len(const_after),sum(np.abs(features[:,idx_j1Eta])<cuts['j1Eta']))
+		self.assertEqual(len(features_after),len(const_after))
+		cuts = {'j2Eta': 2.4}
+		const_after, features_after = self.reader.make_cuts(constituents, features, **cuts)
+		self.assertEqual(len(const_after),sum(np.abs(features[:, idx_dEta]+features[:,idx_j1Eta])<cuts['j2Eta']))
+		self.assertEqual(len(features_after),len(const_after))
 		
-
 
 
 

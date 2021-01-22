@@ -40,6 +40,6 @@ def get_mask_for_cuts(features, cut_dict):
         elif key == 'j1Eta':
             mask *= np.abs(features[:, FEAT_IDX[key]]) < value
         elif key == 'j2Eta':
-            mask *= np.abs(features[:, FEAT_IDX['DeltaEtaJJ']] + features[:, FEAT_IDX[key]]) < value
+            mask *= np.abs(features[:, FEAT_IDX['DeltaEtaJJ']] + features[:, FEAT_IDX['j1Eta']]) < value
 
     return mask
