@@ -71,14 +71,13 @@ class DataReader():
 
 
     def make_cuts(self, constituents, features, **cuts):
-        mask = ut.get_mask_for_cuts(features, cuts)
+        mask = ut.get_mask_for_cuts(features, **cuts)
         constituents, features = ut.mask_arrays(constituents, features, mask=mask)
         return constituents, features
 
 
     def read_events_from_file(self, fname=None, **cuts):
-        if fname is None:
-            fname = self.path
+        fname = fname or self.path
 
         try:
             constituents, features = self.read_constituents_and_dijet_features_from_file(fname) # -> np.ndarray, np.ndarray
@@ -209,13 +208,13 @@ class DataReader():
         return constituents
 
 
-    def generate_constituents_parts_from_dir(self, parts_sz_mb=None, parts_n=None):
-        for (constituents, features) in self.generate_event_parts_from_dir(parts_sz_mb=parts_sz_mb, parts_n=parts_n):
+    def generate_constituents_parts_from_dir(self, parts_sz_mb=None, parts_n=None, **cuts):
+        for (constituents, features) in self.generate_event_parts_from_dir(parts_sz_mb=parts_sz_mb, parts_n=parts_n, **cuts):
             yield constituents # -> np.ndarray parts_n or parts_sz_mb sized chunks
 
 
-    def read_jet_features_from_dir(self, read_n=None, apply_mjj_cut=True):
-        ''' TODO: adapt to new version of cutting: makes_cuts() vs filter_arrays_on_value '''
+    def read_jet_features_from_dir(self, read_n=None, **cuts):
+        ''' reading only dijet feature data from directory '''
         print('[DataReader] read_jet_features_from_dir(): reading {} events from {}'.format((read_n or 'all'), self.path))
 
         features_concat = []
@@ -224,8 +223,8 @@ class DataReader():
         for i_file, fname in enumerate(flist):
             try:
                 features = self.read_data_from_file(key=self.jet_features_key, path=fname)
-                if apply_mjj_cut:
-                    features, = ut.filter_arrays_on_value(features, filter_arr=features[:, 0], filter_val=self.mjj_cut) # 0: mjj_idx # TODO: when filter() is passed only one array, has to be unpacked by caller as a, = filter() => need to change variadic *arrays argument!
+                if cuts:
+                    features = features[ut.get_mask_for_cuts(features, **cuts)]
                 features_concat.append(features)
                 n += len(features)
             except OSError as e:
@@ -243,8 +242,8 @@ class DataReader():
         return [features_concat, dijet_feature_names]
 
 
-    def read_jet_features_from_dir_to_df(self, read_n=None, apply_mjj_cut=True):
-        features, names = self.read_jet_features_from_dir(read_n=read_n, apply_mjj_cut=apply_mjj_cut)
+    def read_jet_features_from_dir_to_df(self, read_n=None, **cuts):
+        features, names = self.read_jet_features_from_dir(read_n=read_n, **cuts)
         return pd.DataFrame(features,columns=names)
 
 

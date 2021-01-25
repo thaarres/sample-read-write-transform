@@ -14,12 +14,12 @@ def mask_arrays(*arrays, mask):
     return [a[mask] for a in arrays] # a[multi_idx] = smart idx => data copied in result (unlike slicing)
 
 
-def get_mask_for_cuts(features, cut_dict):
+def get_mask_for_cuts(features, **cuts):
     ''' create mask for events based on jet-feature values '''
 
     mask = np.ones(len(features), dtype=bool)
     
-    for key, value in cut_dict.items():
+    for key, value in cuts.items():
     
         # | dEtaJJ | cuts into sideband and signalregion
         if key == 'sideband':
