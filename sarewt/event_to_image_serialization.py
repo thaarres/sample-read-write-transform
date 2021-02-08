@@ -43,7 +43,7 @@ class ImageSerializer():
         return [ self.bin_data_to_image( events_j1, bin_borders ), self.bin_data_to_image( events_j2, bin_borders ) ]
 
 
-    def normalize_by_jet_pt(self, images_j1, images_j2, jet_features, labels ):
+    def normalize_by_jet_pt(self, images_j1, images_j2, jet_features, labels):
         idx_ptj1 = labels.index('j1Pt')
         idx_ptj2 = labels.index('j2Pt')
         images_j1 = np.divide(images_j1, jet_features[:, idx_ptj1, None, None])

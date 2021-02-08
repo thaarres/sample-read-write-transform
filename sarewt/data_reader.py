@@ -19,7 +19,6 @@ class DataReader():
         self.jet_features_key = 'eventFeatures'
         self.dijet_feature_names = 'eventFeatureNames'
         self.constituents_feature_names = 'particleFeatureNames'
-        self.mjj_cut = 1100.
         self.constituents_shape = (2, 100, 3)
         self.features_shape = (11,)
 
@@ -76,7 +75,7 @@ class DataReader():
         return constituents, features
 
 
-    def read_events_from_file(self, fname=None, **cuts):
+    def read_events_from_file(self, fname=None, **cuts): # -> np.ndarray, np.ndarray
         fname = fname or self.path
 
         try:
@@ -92,11 +91,13 @@ class DataReader():
 
         return np.asarray(constituents), np.asarray(features)
 
+
     def extend_by_file_content(self, constituents, features, fname, **cuts):
         cc, ff = self.read_events_from_file(fname, **cuts)
         constituents.extend(cc)
         features.extend(ff)
         return constituents, features
+
 
     def append_file_content(self, constituents, features, fname, **cuts):
         cc, ff = self.read_events_from_file(fname, **cuts)
@@ -108,6 +109,7 @@ class DataReader():
     def get_slice_of_size_stop_index(constituents, features, parts_sz_mb):
         single_event_sz = constituents[0].nbytes + features[0].nbytes
         return int(round(parts_sz_mb / single_event_sz))
+
 
     def generate_event_parts_by_size(self, flist, parts_sz_mb, **cuts):
         ''' not tested! '''
@@ -253,8 +255,8 @@ class DataReader():
         '''
         return self.read_data_from_file(self.jet_constituents_key)
 
-    def read_jet_features_from_file(self, features_to_df=False):
-        features = self.read_data_from_file(self.jet_features_key)
+    def read_jet_features_from_file(self, features_to_df=False, **cuts):
+        _, features = self.read_events_from_file(**cuts)
         if features_to_df:
             features = pd.DataFrame(features, columns=self.read_labels_from_file(self.dijet_feature_names))
         return features
@@ -350,7 +352,6 @@ class CaseDataReader(DataReader):
         for i_file, fname in enumerate(flist):
             try:
                 constituents, features = self.read_constituents_and_dijet_features_from_file(fname)
-                #constituents, features = ut.filter_arrays_on_value(constituents, features, filter_arr=features[:, 0], filter_val=self.mjj_cut) # 0: mjj_idx
                 truth_labels = self.read_data_from_file(self.truth_label_key, fname)
                 constituents_concat.extend(constituents)
                 features_concat.extend(features)
