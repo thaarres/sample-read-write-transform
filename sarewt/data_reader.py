@@ -52,6 +52,7 @@ class DataReader():
     def count_files_events_in_dir(self):
 
         features_n = 0
+        files_n = 0
 
         flist = self.get_file_list()
 
@@ -59,6 +60,7 @@ class DataReader():
             try:
                 features = self.read_data_from_file(key=self.jet_features_key, path=fname)
                 features_n += len(features)
+                files_n += 1
             except OSError as e:
                 print("\nCould not read file ", fname, ': ', repr(e))
             except IndexError as e:
@@ -66,7 +68,7 @@ class DataReader():
             except Exception as e:
                 print("\nCould not read file ", fname, ': ', repr(e))
 
-        return len(flist), features_n
+        return files_n, features_n
 
 
     def make_cuts(self, constituents, features, **cuts):
