@@ -49,12 +49,12 @@ class DataReader():
             return [constituents, features]
 
 
-    def count_files_events_in_dir(self):
+    def count_files_events_in_dir(self, recursive=False):
 
         features_n = 0
         files_n = 0
 
-        flist = self.get_file_list()
+        flist = self.get_file_list() if recursive else glob.glob(self.path + '/*.h5')
 
         for i_file, fname in enumerate(flist):
             try:
