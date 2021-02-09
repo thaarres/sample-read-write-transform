@@ -1,7 +1,7 @@
 import h5py
 import os
 import numpy as np
-from glob import glob
+import glob
 import pandas as pd
 import operator
 
@@ -29,7 +29,7 @@ class DataReader():
         for path, _, _ in os.walk(self.path, followlinks=True):
             if "MAYBE_BROKEN" in path:
                 continue
-            flist += glob(path + '/' + '*.h5')
+            flist += glob.glob(path + '/' + '*.h5')
         flist.sort()
         return flist
 
