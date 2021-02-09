@@ -3,7 +3,7 @@ import os
 import glob
 import argparse
 
-def count_number_events_recursively(base_dir):
+def count_number_events_recursively(base_dir, **cuts):
 
     sample_dirs =  glob.glob(base_dir+'/*')
 

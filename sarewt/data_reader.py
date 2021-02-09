@@ -35,8 +35,7 @@ class DataReader():
 
 
     def read_data_from_file(self, key, path=None):
-        if path is None:
-            path = self.path
+        path = path or self.path
         with h5py.File(path,'r') as f:
             return np.asarray(f.get(key))
 
@@ -49,7 +48,7 @@ class DataReader():
             return [constituents, features]
 
 
-    def count_files_events_in_dir(self, recursive=False):
+    def count_files_events_in_dir(self, recursive=False, **cuts):
 
         features_n = 0
         files_n = 0
@@ -58,7 +57,7 @@ class DataReader():
 
         for i_file, fname in enumerate(flist):
             try:
-                features = self.read_data_from_file(key=self.jet_features_key, path=fname)
+                features = self.read_jet_features_from_file(path=fname, **cuts)
                 features_n += len(features)
                 files_n += 1
             except OSError as e:
@@ -202,7 +201,7 @@ class DataReader():
 
         particle_feature_names, dijet_feature_names = self.read_labels_from_dir(flist)
 
-        features = pd.DataFrame(features_concat,columns=dijet_feature_names) if features_to_df else features_concat
+        features = pd.DataFrame(features_concat, columns=dijet_feature_names) if features_to_df else features_concat
         return [constituents_concat, particle_feature_names, features, dijet_feature_names]
 
 
@@ -217,6 +216,16 @@ class DataReader():
             yield constituents # -> np.ndarray parts_n or parts_sz_mb sized chunks
 
 
+    def read_jet_features_from_file(self, path=None, features_to_df=False, **cuts):
+        path = path or self.path
+        features = self.read_data_from_file(key=self.jet_features_key, path=path)
+        if cuts:
+            features = features[ut.get_mask_for_cuts(features, **cuts)]
+        if features_to_df:
+            features = pd.DataFrame(features, columns=self.read_labels_from_file(self.dijet_feature_names))
+        return features
+
+
     def read_jet_features_from_dir(self, read_n=None, **cuts):
         ''' reading only dijet feature data from directory '''
         print('[DataReader] read_jet_features_from_dir(): reading {} events from {}'.format((read_n or 'all'), self.path))
@@ -226,9 +235,7 @@ class DataReader():
         flist = self.get_file_list()
         for i_file, fname in enumerate(flist):
             try:
-                features = self.read_data_from_file(key=self.jet_features_key, path=fname)
-                if cuts:
-                    features = features[ut.get_mask_for_cuts(features, **cuts)]
+                features = self.read_jet_features_from_file(path=fname, **cuts)
                 features_concat.append(features)
                 n += len(features)
             except OSError as e:
@@ -248,7 +255,7 @@ class DataReader():
 
     def read_jet_features_from_dir_to_df(self, read_n=None, **cuts):
         features, names = self.read_jet_features_from_dir(read_n=read_n, **cuts)
-        return pd.DataFrame(features,columns=names)
+        return pd.DataFrame(features, columns=names)
 
 
     def read_constituents_from_file(self):
@@ -257,11 +264,6 @@ class DataReader():
         '''
         return self.read_data_from_file(self.jet_constituents_key)
 
-    def read_jet_features_from_file(self, features_to_df=False, **cuts):
-        _, features = self.read_events_from_file(**cuts)
-        if features_to_df:
-            features = pd.DataFrame(features, columns=self.read_labels_from_file(self.dijet_feature_names))
-        return features
 
     def read_labels(self, key=None, path=None):
         key = key or self.dijet_feature_names
