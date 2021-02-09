@@ -48,28 +48,6 @@ class DataReader():
             return [constituents, features]
 
 
-    def count_files_events_in_dir(self, recursive=False, **cuts):
-
-        features_n = 0
-        files_n = 0
-
-        flist = self.get_file_list() if recursive else glob.glob(self.path + '/*.h5')
-
-        for i_file, fname in enumerate(flist):
-            try:
-                features = self.read_jet_features_from_file(path=fname, **cuts)
-                features_n += len(features)
-                files_n += 1
-            except OSError as e:
-                print("\nCould not read file ", fname, ': ', repr(e))
-            except IndexError as e:
-                print("\nNo data in file ", fname, ':', repr(e))
-            except Exception as e:
-                print("\nCould not read file ", fname, ': ', repr(e))
-
-        return files_n, features_n
-
-
     def make_cuts(self, constituents, features, **cuts):
         mask = ut.get_mask_for_cuts(features, **cuts)
         constituents, features = ut.mask_arrays(constituents, features, mask=mask)
@@ -205,6 +183,13 @@ class DataReader():
         return [constituents_concat, particle_feature_names, features, dijet_feature_names]
 
 
+    def read_constituents_from_file(self):
+        ''' return array of shape [N x 2 x 100 x 3] with
+            N examples, each with 2 jets, each with 100 highest pt particles, each with features eta phi pt
+        '''
+        return self.read_data_from_file(self.jet_constituents_key)
+
+
     def read_constituents_from_dir(self, read_n=None): # -> np.ndarray [n x 2 x 100 x 3]
         ''' read constituents of jet 1 and jet 2 from all file parts in directory '''
         constituents, *_ = self.read_events_from_dir(read_n=read_n)
@@ -226,7 +211,7 @@ class DataReader():
         return features
 
 
-    def read_jet_features_from_dir(self, read_n=None, **cuts):
+    def read_jet_features_from_dir(self, read_n=None, features_to_df=False, **cuts):
         ''' reading only dijet feature data from directory '''
         print('[DataReader] read_jet_features_from_dir(): reading {} events from {}'.format((read_n or 'all'), self.path))
 
@@ -250,19 +235,10 @@ class DataReader():
 
         dijet_feature_names, = self.read_labels_from_dir(flist=flist, keylist=[self.dijet_feature_names])
 
+        if features_to_df:
+            features_concat = pd.DataFrame(features_concat, columns=dijet_feature_names)
+
         return [features_concat, dijet_feature_names]
-
-
-    def read_jet_features_from_dir_to_df(self, read_n=None, **cuts):
-        features, names = self.read_jet_features_from_dir(read_n=read_n, **cuts)
-        return pd.DataFrame(features, columns=names)
-
-
-    def read_constituents_from_file(self):
-        ''' return array of shape [N x 2 x 100 x 3] with
-            N examples, each with 2 jets, each with 100 highest pt particles, each with features eta phi pt
-        '''
-        return self.read_data_from_file(self.jet_constituents_key)
 
 
     def read_labels(self, key=None, path=None):
@@ -294,6 +270,27 @@ class DataReader():
 
         return labels
 
+
+    def count_files_events_in_dir(self, recursive=False, **cuts):
+
+        features_n = 0
+        files_n = 0
+
+        flist = self.get_file_list() if recursive else glob.glob(self.path + '/*.h5')
+
+        for i_file, fname in enumerate(flist):
+            try:
+                features = self.read_jet_features_from_file(path=fname, **cuts)
+                features_n += len(features)
+                files_n += 1
+            except OSError as e:
+                print("\nCould not read file ", fname, ': ', repr(e))
+            except IndexError as e:
+                print("\nNo data in file ", fname, ':', repr(e))
+            except Exception as e:
+                print("\nCould not read file ", fname, ': ', repr(e))
+
+        return files_n, features_n
 
     # def __del__(self):
     #   print('[DataReader] deleting...')
