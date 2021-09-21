@@ -90,27 +90,27 @@ class DataReader():
         return int(round(parts_sz_mb / single_event_sz))
 
 
-    def generate_event_parts_by_size(self, flist, parts_sz_mb, **cuts):
-        ''' not tested! '''
-
-        # keep data in numpy arrays for size control
-        cons_cnct = np.empty((0, *self.constituents_shape))
-        feat_cnct = np.empty((0, *self.features_shape))
-        samples_in_part_n = None
-
-        for i_file, fname in enumerate(flist):
-            cons_cnct, feat_cnct = self.append_file_content(cons_cnct, feat_cnct, fname, **cuts)
-            sz_mb_total = (cons_cnct.nbytes + feat_cnct.nbytes) / 1024**2
-
-            while (sz_mb_total >= parts_sz_mb): # if event sample size exceeding max size or min n, yield next chunk and reset
-                if samples_in_part_n is None:
-                    samples_in_part_n = self.get_slice_of_size_indices(cons_cnct, feat_cnct, parts_sz_mb)
-                cons_part, feat_part = cons_cnct[-parts_n:], feat_cnct[-parts_n:] # take last parts_n samples
-                cons_cnct, feat_cnct = np.resize(cons_cnct, (cons_cnct.shape[0]-parts_n, *cons_cnct.shape[1:])), np.resize(feat_cnct, (feat_cnct.shape[0]-parts_n, *feat_cnct.shape[1:]))
-                yield (cons_part, feat_part)
-        # if data left, yield it
-        if len(feat_cnct) > 0:
-            yield (cons_cnct, feat_cnct)
+    # def generate_event_parts_by_size(self, flist, parts_sz_mb, **cuts):
+    #     ''' not tested! '''
+    #
+    #     # keep data in numpy arrays for size control
+    #     cons_cnct = np.empty((0, *self.constituents_shape))
+    #     feat_cnct = np.empty((0, *self.features_shape))
+    #     samples_in_part_n = None
+    #
+    #     for i_file, fname in enumerate(flist):
+    #         cons_cnct, feat_cnct = self.append_file_content(cons_cnct, feat_cnct, fname, **cuts)
+    #         sz_mb_total = (cons_cnct.nbytes + feat_cnct.nbytes) / 1024**2
+    #
+    #         while (sz_mb_total >= parts_sz_mb): # if event sample size exceeding max size or min n, yield next chunk and reset
+    #             if samples_in_part_n is None:
+    #                 samples_in_part_n = self.get_slice_of_size_indices(cons_cnct, feat_cnct, parts_sz_mb)
+    #             cons_part, feat_part = cons_cnct[-parts_n:], feat_cnct[-parts_n:] # take last parts_n samples
+    #             cons_cnct, feat_cnct = np.resize(cons_cnct, (cons_cnct.shape[0]-parts_n, *cons_cnct.shape[1:])), np.resize(feat_cnct, (feat_cnct.shape[0]-parts_n, *feat_cnct.shape[1:]))
+    #             yield (cons_part, feat_part)
+    #     # if data left, yield it
+    #     if len(feat_cnct) > 0:
+    #         yield (cons_cnct, feat_cnct)
 
 
     def generate_event_parts_by_num(self, parts_n, flist, **cuts):
@@ -207,7 +207,7 @@ class DataReader():
         if cuts:
             features = features[ut.get_mask_for_cuts(features, **cuts)]
         if features_to_df:
-            features = pd.DataFrame(features, columns=self.read_labels_from_file(self.dijet_feature_names))
+            features = pd.DataFrame(features, columns=self.read_labels_from_file(path, self.dijet_feature_names))
         return features
 
 
